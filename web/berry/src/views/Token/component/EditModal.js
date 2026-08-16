@@ -51,7 +51,8 @@ const originInputs = {
   expired_time: -1,
   unlimited_quota: false,
   subnet: '',
-  models: []
+  models: [],
+  key_type: 'openai'
 };
 
 const EditModal = ({ open, tokenId, onCancel, onOk }) => {
@@ -157,6 +158,21 @@ const EditModal = ({ open, tokenId, onCancel, onOk }) => {
                     {errors.name}
                   </FormHelperText>
                 )}
+              </FormControl>
+              <FormControl fullWidth sx={{ ...theme.typography.otherInput }}>
+                <InputLabel htmlFor="channel-key-type-label">密钥类型</InputLabel>
+                <OutlinedInput
+                  id="channel-key-type-label"
+                  label="密钥类型"
+                  type="text"
+                  value={values.key_type === 'cc' ? 'Claude Code 格式 (sk-ant-)' : 'OpenAI 兼容格式'}
+                  name="key_type"
+                  disabled={true}
+                  aria-describedby="helper-text-channel-key-type-label"
+                />
+                <FormHelperText id="helper-text-channel-key-type-label">
+                  {values.is_edit ? '密钥类型创建后不可修改' : '默认为 OpenAI 兼容格式'}
+                </FormHelperText>
               </FormControl>
               <FormControl fullWidth sx={{ ...theme.typography.otherInput }}>
                 <Autocomplete

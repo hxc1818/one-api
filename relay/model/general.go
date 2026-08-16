@@ -66,6 +66,28 @@ type GeneralOpenAIRequest struct {
 	// Others
 	Instruction string `json:"instruction,omitempty"`
 	NumCtx      int    `json:"num_ctx,omitempty"`
+	// Responses API specific fields
+	// https://developers.openai.com/api/reference/resources/responses/methods/create
+	ConversationId     string     `json:"conversation_id,omitempty"`
+	PreviousResponseId string     `json:"previous_response_id,omitempty"`
+	InputItems         []InputItem `json:"input_items,omitempty"`
+}
+
+// InputItem represents an item in the Responses API input_items array
+type InputItem struct {
+	Type    string    `json:"type"`              // "message" or other types
+	Role    string    `json:"role,omitempty"`    // "user", "assistant", "system"
+	Content []Content `json:"content,omitempty"` // Content array for multimodal input
+}
+
+// Content represents content in an input item
+type Content struct {
+	Type     string `json:"type"`               // "text", "image_url", etc.
+	Text     string `json:"text,omitempty"`     // For text content
+	ImageUrl *struct {
+		Url    string `json:"url"`
+		Detail string `json:"detail,omitempty"`
+	} `json:"image_url,omitempty"` // For image content
 }
 
 func (r GeneralOpenAIRequest) ParseInput() []string {

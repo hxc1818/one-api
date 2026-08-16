@@ -27,7 +27,8 @@ const EditToken = (props) => {
     expired_time: -1,
     unlimited_quota: false,
     model_limits_enabled: false,
-    model_limits: []
+    model_limits: [],
+    key_type: 'openai'
   };
   const [inputs, setInputs] = useState(originInputs);
   const { name, remain_quota, expired_time, unlimited_quota, model_limits_enabled, model_limits } = inputs;
@@ -230,6 +231,19 @@ const EditToken = (props) => {
             value={name}
             autoComplete="new-password"
             required={!isEdit}
+          />
+          <Select
+            style={{ marginTop: 20 }}
+            label="密钥类型"
+            name="key_type"
+            placeholder={'请选择密钥类型'}
+            onChange={(value) => handleInputChange('key_type', value)}
+            value={inputs.key_type}
+            disabled={isEdit}
+            optionList={[
+              { value: 'openai', label: 'OpenAI 兼容格式' },
+              { value: 'cc', label: 'Claude Code 格式 (sk-ant-)' }
+            ]}
           />
           <Divider />
           <DatePicker

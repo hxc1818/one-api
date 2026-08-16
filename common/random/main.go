@@ -37,6 +37,18 @@ func GenerateKey() string {
 	return string(key)
 }
 
+// GenerateCCKey generates a Claude Code format key (sk-ant-api03-...)
+func GenerateCCKey() string {
+	rand.Seed(time.Now().UnixNano())
+	// CC format: sk-ant-api03- + 95 chars random string
+	prefix := "sk-ant-api03-"
+	randomPart := make([]byte, 95)
+	for i := 0; i < 95; i++ {
+		randomPart[i] = keyChars[rand.Intn(len(keyChars))]
+	}
+	return prefix + string(randomPart)
+}
+
 func GetRandomString(length int) string {
 	rand.Seed(time.Now().UnixNano())
 	key := make([]byte, length)

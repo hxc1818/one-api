@@ -25,3 +25,29 @@ type ErrorWithStatusCode struct {
 	Error
 	StatusCode int `json:"status_code"`
 }
+
+// ResponsesAPIResponse represents the response from Responses API
+type ResponsesAPIResponse struct {
+	Id                 string              `json:"id"`
+	Object             string              `json:"object"`
+	Created            int64               `json:"created"`
+	Model              string              `json:"model"`
+	ConversationId     string              `json:"conversation_id,omitempty"`
+	OutputItems        []ResponseOutputItem `json:"output_items,omitempty"`
+	Usage              *Usage              `json:"usage,omitempty"`
+	Status             string              `json:"status,omitempty"`           // "completed", "in_progress", etc.
+	IncompleteDetails  *IncompleteDetails  `json:"incomplete_details,omitempty"`
+}
+
+// ResponseOutputItem represents an output item in Responses API response
+type ResponseOutputItem struct {
+	Type    string  `json:"type"`              // "message", "function_call", etc.
+	Role    string  `json:"role,omitempty"`    // "assistant"
+	Content []Content `json:"content,omitempty"` // Content array
+	ToolCalls []Tool  `json:"tool_calls,omitempty"`
+}
+
+// IncompleteDetails provides details when response is incomplete
+type IncompleteDetails struct {
+	Reason string `json:"reason,omitempty"` // "max_tokens", "stop_sequence", etc.
+}

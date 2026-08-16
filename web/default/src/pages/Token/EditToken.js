@@ -32,9 +32,10 @@ const EditToken = () => {
     unlimited_quota: false,
     models: [],
     subnet: '',
+    key_type: 'openai',
   };
   const [inputs, setInputs] = useState(originInputs);
-  const { name, remain_quota, expired_time, unlimited_quota } = inputs;
+  const { name, remain_quota, expired_time, unlimited_quota, key_type } = inputs;
   const navigate = useNavigate();
   const handleInputChange = (e, { name, value }) => {
     setInputs((inputs) => ({ ...inputs, [name]: value }));
@@ -169,6 +170,22 @@ const EditToken = () => {
                 value={name}
                 autoComplete='new-password'
                 required={!isEdit}
+              />
+            </Form.Field>
+            <Form.Field>
+              <Form.Dropdown
+                label='密钥类型'
+                name='key_type'
+                placeholder='选择密钥格式'
+                fluid
+                selection
+                onChange={handleInputChange}
+                value={key_type}
+                disabled={isEdit}
+                options={[
+                  { key: 'openai', text: 'OpenAI 兼容格式', value: 'openai' },
+                  { key: 'cc', text: 'Claude Code 格式 (sk-ant-)', value: 'cc' },
+                ]}
               />
             </Form.Field>
             <Form.Field>

@@ -13,6 +13,13 @@ import (
 	"strconv"
 )
 
+func generateKeyByType(keyType string) string {
+	if keyType == "cc" {
+		return random.GenerateCCKey()
+	}
+	return random.GenerateKey()
+}
+
 func GetAllTokens(c *gin.Context) {
 	userId := c.GetInt(ctxkey.Id)
 	p, _ := strconv.Atoi(c.Query("p"))
@@ -142,7 +149,8 @@ func AddToken(c *gin.Context) {
 	cleanToken := model.Token{
 		UserId:         c.GetInt(ctxkey.Id),
 		Name:           token.Name,
-		Key:            random.GenerateKey(),
+		Key:            generateKeyByType(token.KeyType),
+		KeyType:        token.KeyType,
 		CreatedTime:    helper.GetTimestamp(),
 		AccessedTime:   helper.GetTimestamp(),
 		ExpiredTime:    token.ExpiredTime,
@@ -239,6 +247,7 @@ func UpdateToken(c *gin.Context) {
 		cleanToken.UnlimitedQuota = token.UnlimitedQuota
 		cleanToken.Models = token.Models
 		cleanToken.Subnet = token.Subnet
+		cleanToken.KeyType = token.KeyType
 	}
 	err = cleanToken.Update()
 	if err != nil {

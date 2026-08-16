@@ -23,7 +23,8 @@ const (
 type Token struct {
 	Id             int     `json:"id"`
 	UserId         int     `json:"user_id"`
-	Key            string  `json:"key" gorm:"type:char(48);uniqueIndex"`
+	Key            string  `json:"key" gorm:"type:varchar(150);uniqueIndex"`
+	KeyType        string  `json:"key_type" gorm:"type:varchar(20);default:'openai'"` // 'openai' or 'cc'
 	Status         int     `json:"status" gorm:"default:1"`
 	Name           string  `json:"name" gorm:"index" `
 	CreatedTime    int64   `json:"created_time" gorm:"bigint"`
@@ -132,7 +133,7 @@ func (t *Token) Insert() error {
 // Update Make sure your token's fields is completed, because this will update non-zero values
 func (t *Token) Update() error {
 	var err error
-	err = DB.Model(t).Select("name", "status", "expired_time", "remain_quota", "unlimited_quota", "models", "subnet").Updates(t).Error
+	err = DB.Model(t).Select("name", "status", "expired_time", "remain_quota", "unlimited_quota", "models", "subnet", "key_type").Updates(t).Error
 	return err
 }
 

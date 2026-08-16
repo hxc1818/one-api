@@ -169,6 +169,17 @@ export default function TokensTableRow({ item, manageToken, handleOpenModal, set
     <>
       <TableRow tabIndex={item.id}>
         <TableCell>{item.name}</TableCell>
+        <TableCell>
+          <span style={{ 
+            padding: '2px 8px', 
+            borderRadius: '4px', 
+            fontSize: '12px',
+            backgroundColor: item.key_type === 'cc' ? '#e3f2fd' : '#f5f5f5',
+            color: item.key_type === 'cc' ? '#1976d2' : '#666'
+          }}>
+            {item.key_type === 'cc' ? 'CC' : 'OpenAI'}
+          </span>
+        </TableCell>
 
         <TableCell>
           <Tooltip

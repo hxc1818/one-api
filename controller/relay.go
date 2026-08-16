@@ -34,6 +34,8 @@ func relayHelper(c *gin.Context, relayMode int) *model.ErrorWithStatusCode {
 		fallthrough
 	case relaymode.AudioTranscription:
 		err = controller.RelayAudioHelper(c, relayMode)
+	case relaymode.Responses:
+		err = controller.RelayResponsesHelper(c)
 	case relaymode.Proxy:
 		err = controller.RelayProxyHelper(c, relayMode)
 	default:

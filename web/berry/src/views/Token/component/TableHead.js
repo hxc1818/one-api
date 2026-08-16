@@ -5,6 +5,7 @@ const TokenTableHead = () => {
     <TableHead>
       <TableRow>
         <TableCell>名称</TableCell>
+        <TableCell>密钥类型</TableCell>
         <TableCell>状态</TableCell>
         <TableCell>已用额度</TableCell>
         <TableCell>剩余额度</TableCell>

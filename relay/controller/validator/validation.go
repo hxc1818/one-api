@@ -35,3 +35,17 @@ func ValidateTextRequest(textRequest *model.GeneralOpenAIRequest, relayMode int)
 	}
 	return nil
 }
+
+// ValidateResponsesRequest validates Responses API request
+func ValidateResponsesRequest(request *model.GeneralOpenAIRequest) error {
+	if request.Model == "" {
+		return errors.New("model is required")
+	}
+	if request.InputItems == nil || len(request.InputItems) == 0 {
+		return errors.New("field input_items is required")
+	}
+	if request.MaxTokens < 0 || request.MaxTokens > math.MaxInt32/2 {
+		return errors.New("max_tokens is invalid")
+	}
+	return nil
+}

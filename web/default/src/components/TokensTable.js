@@ -326,6 +326,9 @@ const TokensTable = () => {
             >
               {t('token.table.name')}
             </Table.HeaderCell>
+            <Table.HeaderCell>
+              密钥类型
+            </Table.HeaderCell>
             <Table.HeaderCell
               style={{ cursor: 'pointer' }}
               onClick={() => {
@@ -399,6 +402,11 @@ const TokensTable = () => {
                 <Table.Row key={token.id}>
                   <Table.Cell>
                     {token.name ? token.name : t('token.table.no_name')}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Label size='mini' color={token.key_type === 'cc' ? 'blue' : 'grey'}>
+                      {token.key_type === 'cc' ? 'CC' : 'OpenAI'}
+                    </Label>
                   </Table.Cell>
                   <Table.Cell>{renderStatus(token.status, t)}</Table.Cell>
                   <Table.Cell>{renderQuota(token.used_quota, t)}</Table.Cell>

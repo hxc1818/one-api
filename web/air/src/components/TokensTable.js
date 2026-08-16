@@ -76,6 +76,17 @@ const TokensTable = () => {
       dataIndex: 'name'
     },
     {
+      title: '密钥类型',
+      dataIndex: 'key_type',
+      render: (text, record, index) => {
+        return (
+          <Tag size='large' color={text === 'cc' ? 'blue' : 'grey'}>
+            {text === 'cc' ? 'CC' : 'OpenAI'}
+          </Tag>
+        );
+      }
+    },
+    {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
