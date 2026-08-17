@@ -12,6 +12,7 @@ import (
 	"github.com/songquanpeng/one-api/relay/adaptor"
 	"github.com/songquanpeng/one-api/relay/adaptor/alibailian"
 	"github.com/songquanpeng/one-api/relay/adaptor/baiduv2"
+	"github.com/songquanpeng/one-api/relay/adaptor/codex"
 	"github.com/songquanpeng/one-api/relay/adaptor/doubao"
 	"github.com/songquanpeng/one-api/relay/adaptor/geminiv2"
 	"github.com/songquanpeng/one-api/relay/adaptor/minimax"
@@ -109,7 +110,14 @@ func (a *Adaptor) DoRequest(c *gin.Context, meta *meta.Meta, requestBody io.Read
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, meta *meta.Meta) (usage *model.Usage, err *model.ErrorWithStatusCode) {
 	if meta.IsStream {
 		var responseText string
-		err, responseText, usage = StreamHandler(c, resp, meta.Mode)
+		// Check if we need Codex conversion
+		needCodexConversion, exists := c.Get("need_codex_conversion")
+		if exists && needCodexConversion.(bool) {
+			// Use Codex stream handler for conversion
+			err, responseText, usage = codex.StreamHandlerWithCodexConversion(c, resp)
+		} else {
+			err, responseText, usage = StreamHandler(c, resp, meta.Mode)
+		}
 		if usage == nil || usage.TotalTokens == 0 {
 			usage = ResponseText2Usage(responseText, meta.ActualModelName, meta.PromptTokens)
 		}

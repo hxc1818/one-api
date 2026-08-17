@@ -47,6 +47,18 @@ func relayHelper(c *gin.Context, relayMode int) *model.ErrorWithStatusCode {
 func Relay(c *gin.Context) {
 	ctx := c.Request.Context()
 	relayMode := relaymode.GetByPath(c.Request.URL.Path)
+	
+	// Check if this is a Codex key type requesting /v1/responses
+	// If so, convert to ChatCompletions mode
+	if relayMode == relaymode.Responses {
+		tokenKeyType := c.GetString(ctxkey.TokenKeyType)
+		if tokenKeyType == "codex" {
+			// Convert Responses request to ChatCompletions
+			c.Set(ctxkey.NeedCodexConversion, true)
+			relayMode = relaymode.ChatCompletions
+		}
+	}
+	
 	if config.DebugEnabled {
 		requestBody, _ := common.GetRequestBody(c)
 		logger.Debugf(ctx, "request body: %s", string(requestBody))

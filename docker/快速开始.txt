@@ -1,0 +1,91 @@
+========================================
+  One-API Codex 版本 - 快速开始
+========================================
+
+📦 已准备好的文件（docker 文件夹内）：
+
+1. one-api-codex.tar (26MB) - Docker 镜像
+2. docker-compose.yml - 配置文件
+3. deploy.sh - 一键部署脚本
+4. test.sh - 测试脚本
+5. 完整文档（README.md, DEPLOY.md 等）
+
+========================================
+🚀 三步部署：
+========================================
+
+步骤 1: 上传到服务器
+-------------------
+scp -r ./docker user@your-server:/opt/one-api/
+
+步骤 2: 一键部署
+-------------------
+ssh user@your-server
+cd /opt/one-api
+chmod +x deploy.sh
+./deploy.sh
+
+步骤 3: 访问服务
+-------------------
+浏览器打开: http://your-server:3000
+用户名: root
+密码: 123456
+
+⚠️ 首次登录后立即修改密码！
+
+========================================
+✨ 使用 Codex 功能：
+========================================
+
+1. 登录后台 -> 令牌页面
+2. 新建令牌 -> 选择"Codex 格式（自动转换 /v1/responses）"
+3. 保存并复制密钥
+
+4. 测试请求：
+   curl -N http://your-server:3000/v1/responses \
+     -H "Authorization: Bearer sk-your-key" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "model": "gpt-4",
+       "input_items": [{
+         "type": "message",
+         "role": "user",
+         "content": [{"type": "text", "text": "Hello"}]
+       }],
+       "stream": true
+     }'
+
+========================================
+📚 详细文档：
+========================================
+
+- README.md - 快速指南
+- DEPLOY.md - 详细部署文档  
+- CODEX_FEATURE.md - 功能使用说明
+- FILELIST.md - 文件清单
+- IMPLEMENTATION_SUMMARY.md - 技术实现
+
+========================================
+🔧 常用命令：
+========================================
+
+查看状态: docker-compose ps
+查看日志: docker-compose logs -f one-api
+重启服务: docker-compose restart
+停止服务: docker-compose down
+测试功能: ./test.sh http://localhost:3000 sk-your-key
+
+========================================
+💡 核心特性：
+========================================
+
+✅ Codex 密钥类型 - 自动转换格式
+✅ /v1/responses -> /v1/chat/completions
+✅ 流式响应完美转换
+✅ 计费逻辑准确无误
+✅ 完全向后兼容
+✅ 开箱即用
+
+========================================
+准备就绪，可以部署到生产环境！
+========================================

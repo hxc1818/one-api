@@ -185,6 +185,7 @@ const EditToken = () => {
                 options={[
                   { key: 'openai', text: 'OpenAI 兼容格式', value: 'openai' },
                   { key: 'cc', text: 'Claude Code 格式 (sk-ant-)', value: 'cc' },
+                  { key: 'codex', text: 'Codex 格式 (自动转换 /v1/responses)', value: 'codex' },
                 ]}
               />
             </Form.Field>

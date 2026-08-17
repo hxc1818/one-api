@@ -67,7 +67,7 @@ func (m Message) ParseContent() []MessageContent {
 				if subObj, ok := contentMap["image_url"].(map[string]any); ok {
 					contentList = append(contentList, MessageContent{
 						Type: ContentTypeImageURL,
-						ImageURL: &ImageURL{
+						ImageURL: &MessageImageURL{
 							Url: subObj["url"].(string),
 						},
 					})
@@ -85,7 +85,12 @@ type ImageURL struct {
 }
 
 type MessageContent struct {
-	Type     string    `json:"type,omitempty"`
-	Text     string    `json:"text"`
-	ImageURL *ImageURL `json:"image_url,omitempty"`
+	Type     string           `json:"type,omitempty"`
+	Text     string           `json:"text"`
+	ImageURL *MessageImageURL `json:"image_url,omitempty"`
+}
+
+type MessageImageURL struct {
+	Url    string `json:"url,omitempty"`
+	Detail string `json:"detail,omitempty"`
 }

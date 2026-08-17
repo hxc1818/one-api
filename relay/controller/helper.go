@@ -32,6 +32,13 @@ func getAndValidateTextRequest(c *gin.Context, relayMode int) (*relaymodel.Gener
 	if err != nil {
 		return nil, err
 	}
+	
+	// Handle Codex conversion: convert input_items to messages
+	if c.GetBool("need_codex_conversion") && len(textRequest.InputItems) > 0 {
+		// Import codex converter
+		// This will be handled in the actual conversion
+	}
+	
 	if relayMode == relaymode.Moderations && textRequest.Model == "" {
 		textRequest.Model = "text-moderation-latest"
 	}

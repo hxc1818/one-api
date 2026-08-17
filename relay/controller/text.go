@@ -10,9 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/songquanpeng/one-api/common/config"
+	"github.com/songquanpeng/one-api/common/ctxkey"
 	"github.com/songquanpeng/one-api/common/logger"
 	"github.com/songquanpeng/one-api/relay"
 	"github.com/songquanpeng/one-api/relay/adaptor"
+	"github.com/songquanpeng/one-api/relay/adaptor/codex"
 	"github.com/songquanpeng/one-api/relay/adaptor/openai"
 	"github.com/songquanpeng/one-api/relay/apitype"
 	"github.com/songquanpeng/one-api/relay/billing"
@@ -25,12 +27,27 @@ import (
 func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 	ctx := c.Request.Context()
 	meta := meta.GetByContext(c)
+	
+	// Check if we need Codex conversion
+	needCodexConversion := c.GetBool(ctxkey.NeedCodexConversion)
+	
 	// get & validate textRequest
 	textRequest, err := getAndValidateTextRequest(c, meta.Mode)
 	if err != nil {
 		logger.Errorf(ctx, "getAndValidateTextRequest failed: %s", err.Error())
 		return openai.ErrorWrapper(err, "invalid_text_request", http.StatusBadRequest)
 	}
+	
+	// Handle Codex conversion: convert input_items to messages
+	if needCodexConversion && len(textRequest.InputItems) > 0 {
+		// Import the codex package for conversion
+		// We'll need to add this import at the top of the file
+		logger.Infof(ctx, "Converting Codex input_items to messages for Codex key type")
+		textRequest.Messages = codex.InputItemsToMessages(textRequest.InputItems)
+		// Clear input_items after conversion
+		textRequest.InputItems = nil
+	}
+	
 	meta.IsStream = textRequest.Stream
 
 	// map model name

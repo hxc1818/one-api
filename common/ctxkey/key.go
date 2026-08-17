@@ -17,8 +17,10 @@ const (
 	ChannelName       = "channel_name"
 	TokenId           = "token_id"
 	TokenName         = "token_name"
+	TokenKeyType      = "token_key_type"
 	BaseURL           = "base_url"
 	AvailableModels   = "available_models"
 	KeyRequestBody    = "key_request_body"
 	SystemPrompt      = "system_prompt"
+	NeedCodexConversion = "need_codex_conversion"
 )

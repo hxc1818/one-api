@@ -242,7 +242,8 @@ const EditToken = (props) => {
             disabled={isEdit}
             optionList={[
               { value: 'openai', label: 'OpenAI 兼容格式' },
-              { value: 'cc', label: 'Claude Code 格式 (sk-ant-)' }
+              { value: 'cc', label: 'Claude Code 格式 (sk-ant-)' },
+              { value: 'codex', label: 'Codex 格式 (自动转换 /v1/responses)' }
             ]}
           />
           <Divider />
