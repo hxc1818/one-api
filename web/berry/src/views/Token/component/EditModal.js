@@ -165,7 +165,13 @@ const EditModal = ({ open, tokenId, onCancel, onOk }) => {
                   id="channel-key-type-label"
                   label="密钥类型"
                   type="text"
-                  value={values.key_type === 'cc' ? 'Claude Code 格式 (sk-ant-)' : 'OpenAI 兼容格式'}
+                  value={
+                    values.key_type === 'cc' 
+                      ? 'Claude Code 格式 (sk-ant-)' 
+                      : values.key_type === 'codex'
+                      ? 'Codex 格式 (自动转换 /v1/responses)'
+                      : 'OpenAI 兼容格式'
+                  }
                   name="key_type"
                   disabled={true}
                   aria-describedby="helper-text-channel-key-type-label"

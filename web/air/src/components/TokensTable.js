@@ -48,6 +48,15 @@ function renderStatus(status, model_limits_enabled = false) {
   }
 }
 
+function getFullKey(record) {
+  // CC format keys already have sk-ant- prefix, don't add sk- again
+  if (record.key_type === 'cc') {
+    return record.key;
+  }
+  // Codex and OpenAI format keys need sk- prefix
+  return 'sk-' + record.key;
+}
+
 const TokensTable = () => {
 
   const link_menu = [
@@ -80,8 +89,8 @@ const TokensTable = () => {
       dataIndex: 'key_type',
       render: (text, record, index) => {
         return (
-          <Tag size='large' color={text === 'cc' ? 'blue' : 'grey'}>
-            {text === 'cc' ? 'CC' : 'OpenAI'}
+          <Tag size='large' color={text === 'cc' ? 'blue' : text === 'codex' ? 'orange' : 'grey'}>
+            {text === 'cc' ? 'CC' : text === 'codex' ? 'Codex' : 'OpenAI'}
           </Tag>
         );
       }
@@ -150,7 +159,7 @@ const TokensTable = () => {
         <div>
           <Popover
             content={
-              'sk-' + record.key
+              getFullKey(record)
             }
             style={{ padding: 20 }}
             position="top"
@@ -159,12 +168,12 @@ const TokensTable = () => {
           </Popover>
           <Button theme="light" type="secondary" style={{ marginRight: 1 }}
                   onClick={async (text) => {
-                    await copyText('sk-' + record.key);
+                    await copyText(getFullKey(record));
                   }}
           >复制</Button>
           <SplitButtonGroup style={{ marginRight: 1 }} aria-label="项目操作按钮组">
             <Button theme="light" style={{ color: 'rgba(var(--semi-teal-7), 1)' }} onClick={() => {
-              onOpenLink('next', record.key);
+              onOpenLink('next', record);
             }}>聊天</Button>
             <Dropdown trigger="click" position="bottomRight" menu={
               [
@@ -174,7 +183,7 @@ const TokensTable = () => {
                   disabled: !localStorage.getItem('chat_link'),
                   name: 'ChatGPT Next Web',
                   onClick: () => {
-                    onOpenLink('next', record.key);
+                    onOpenLink('next', record);
                   }
                 },
                 {
@@ -183,22 +192,22 @@ const TokensTable = () => {
                   disabled: !localStorage.getItem('chat_link2'),
                   name: 'ChatGPT Web & Midjourney',
                   onClick: () => {
-                    onOpenLink('next-mj', record.key);
+                    onOpenLink('next-mj', record);
                   }
                 },
                 {
                   node: 'item', key: 'ama', name: 'AMA 问天（BotGem）', onClick: () => {
-                    onOpenLink('ama', record.key);
+                    onOpenLink('ama', record);
                   }
                 },
                 {
                   node: 'item', key: 'opencat', name: 'OpenCat', onClick: () => {
-                    onOpenLink('opencat', record.key);
+                    onOpenLink('opencat', record);
                   }
                 },
                 {
                   node: 'item', key: 'lobechat', name: 'LobeChat', onClick: () => {
-                    onOpenLink('lobechat');
+                    onOpenLink('lobechat', record);
                   }
                 }
               ]
@@ -376,7 +385,8 @@ const TokensTable = () => {
     }
   };
 
-  const onOpenLink = async (type, key) => {
+  const onOpenLink = async (type, record) => {
+    const key = getFullKey(record);
     let status = localStorage.getItem('status');
     let serverAddress = '';
     if (status) {
@@ -392,21 +402,21 @@ const TokensTable = () => {
     let defaultUrl;
 
     if (chatLink) {
-      defaultUrl = chatLink + `/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
+      defaultUrl = chatLink + `/#/?settings={"key":"${key}","url":"${serverAddress}"}`;
     }
     let url;
     switch (type) {
       case 'ama':
-        url = `ama://set-api-key?server=${encodedServerAddress}&key=sk-${key}`;
+        url = `ama://set-api-key?server=${encodedServerAddress}&key=${key}`;
         break;
       case 'opencat':
-        url = `opencat://team/join?domain=${encodedServerAddress}&token=sk-${key}`;
+        url = `opencat://team/join?domain=${encodedServerAddress}&token=${key}`;
         break;
       case 'next-mj':
-        url = mjLink + `/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
+        url = mjLink + `/#/?settings={"key":"${key}","url":"${serverAddress}"}`;
         break;
       case 'lobechat':
-        url = chatLink + `/?settings={"keyVaults":{"openai":{"apiKey":"sk-${key}","baseURL":"${serverAddress}/v1"}}}`;
+        url = chatLink + `/?settings={"keyVaults":{"openai":{"apiKey":"${key}","baseURL":"${serverAddress}/v1"}}}`;
         break;
       default:
         if (!chatLink) {
@@ -620,7 +630,7 @@ const TokensTable = () => {
           }
           let keys = '';
           for (let i = 0; i < selectedKeys.length; i++) {
-            keys += selectedKeys[i].name + '    sk-' + selectedKeys[i].key + '\n';
+            keys += selectedKeys[i].name + '    ' + getFullKey(selectedKeys[i]) + '\n';
           }
           await copyText(keys);
         }

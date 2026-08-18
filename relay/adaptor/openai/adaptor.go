@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/songquanpeng/one-api/common/ctxkey"
 	"github.com/songquanpeng/one-api/relay/adaptor"
 	"github.com/songquanpeng/one-api/relay/adaptor/alibailian"
 	"github.com/songquanpeng/one-api/relay/adaptor/baiduv2"
@@ -111,7 +112,7 @@ func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, meta *meta.Met
 	if meta.IsStream {
 		var responseText string
 		// Check if we need Codex conversion
-		needCodexConversion, exists := c.Get("need_codex_conversion")
+		needCodexConversion, exists := c.Get(ctxkey.NeedCodexConversion)
 		if exists && needCodexConversion.(bool) {
 			// Use Codex stream handler for conversion
 			err, responseText, usage = codex.StreamHandlerWithCodexConversion(c, resp)

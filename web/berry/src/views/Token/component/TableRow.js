@@ -28,13 +28,23 @@ const COPY_OPTIONS = [
   {
     key: 'next',
     text: 'ChatGPT Next',
-    url: 'https://app.nextchat.dev/#/?settings={"key":"sk-{key}","url":"{serverAddress}"}',
+    url: 'https://app.nextchat.dev/#/?settings={"key":"{key}","url":"{serverAddress}"}',
     encode: false
   },
-  { key: 'ama', text: 'BotGem', url: 'ama://set-api-key?server={serverAddress}&key=sk-{key}', encode: true },
-  { key: 'opencat', text: 'OpenCat', url: 'opencat://team/join?domain={serverAddress}&token=sk-{key}', encode: true },
-  { key: 'lobechat', text: 'LobeChat', url: 'https://lobehub.com/?settings={"keyVaults":{"openai":{"apiKey":"sk-{key}","baseURL":"{serverAddress}"}}}', encode: true }
+  { key: 'ama', text: 'BotGem', url: 'ama://set-api-key?server={serverAddress}&key={key}', encode: true },
+  { key: 'opencat', text: 'OpenCat', url: 'opencat://team/join?domain={serverAddress}&token={key}', encode: true },
+  { key: 'lobechat', text: 'LobeChat', url: 'https://lobehub.com/?settings={"keyVaults":{"openai":{"apiKey":"{key}","baseURL":"{serverAddress}"}}}', encode: true }
 ];
+
+function getFullKey(item) {
+  // CC format keys already have sk-ant- prefix, don't add sk- again
+  if (item.key_type === 'cc') {
+    return item.key;
+  }
+  // Codex format uses openai format, needs sk- prefix
+  // OpenAI format keys need sk- prefix
+  return 'sk-' + item.key;
+}
 
 function replacePlaceholders(text, key, serverAddress) {
   return text.replace('{key}', key).replace('{serverAddress}', serverAddress);
@@ -134,10 +144,10 @@ export default function TokensTableRow({ item, manageToken, handleOpenModal, set
     let url = option.url;
 
     if (option.key === 'next' && siteInfo?.chat_link) {
-      url = siteInfo.chat_link + `/#/?settings={"key":"sk-{key}","url":"{serverAddress}"}`;
+      url = siteInfo.chat_link + `/#/?settings={"key":"{key}","url":"{serverAddress}"}`;
     }
 
-    const key = item.key;
+    const key = getFullKey(item);
     const text = replacePlaceholders(url, key, serverAddress);
     if (type === 'link') {
       window.open(text);
@@ -174,10 +184,10 @@ export default function TokensTableRow({ item, manageToken, handleOpenModal, set
             padding: '2px 8px', 
             borderRadius: '4px', 
             fontSize: '12px',
-            backgroundColor: item.key_type === 'cc' ? '#e3f2fd' : '#f5f5f5',
-            color: item.key_type === 'cc' ? '#1976d2' : '#666'
+            backgroundColor: item.key_type === 'cc' ? '#e3f2fd' : item.key_type === 'codex' ? '#fff3e0' : '#f5f5f5',
+            color: item.key_type === 'cc' ? '#1976d2' : item.key_type === 'codex' ? '#e65100' : '#666'
           }}>
-            {item.key_type === 'cc' ? 'CC' : 'OpenAI'}
+            {item.key_type === 'cc' ? 'CC' : item.key_type === 'codex' ? 'Codex' : 'OpenAI'}
           </span>
         </TableCell>
 
@@ -222,7 +232,7 @@ export default function TokensTableRow({ item, manageToken, handleOpenModal, set
               <Button
                 color="primary"
                 onClick={() => {
-                  copy(`sk-${item.key}`);
+                  copy(getFullKey(item));
                 }}
               >
                 复制

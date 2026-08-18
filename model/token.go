@@ -24,7 +24,7 @@ type Token struct {
 	Id             int     `json:"id"`
 	UserId         int     `json:"user_id"`
 	Key            string  `json:"key" gorm:"type:varchar(150);uniqueIndex"`
-	KeyType        string  `json:"key_type" gorm:"type:varchar(20);default:'openai'"` // 'openai' or 'cc'
+	KeyType        string  `json:"key_type" gorm:"type:varchar(20);default:'openai'"` // 'openai', 'cc', or 'codex'
 	Status         int     `json:"status" gorm:"default:1"`
 	Name           string  `json:"name" gorm:"index" `
 	CreatedTime    int64   `json:"created_time" gorm:"bigint"`
