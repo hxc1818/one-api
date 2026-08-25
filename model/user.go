@@ -51,6 +51,9 @@ type User struct {
 	Group            string `json:"group" gorm:"type:varchar(32);default:'default'"`
 	AffCode          string `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
 	InviterId        int    `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
+	RPM              int    `json:"rpm" gorm:"type:int;default:0"`  // requests per minute, 0 means unlimited
+	RPD              int    `json:"rpd" gorm:"type:int;default:0"`  // requests per day, 0 means unlimited
+	RPW              int    `json:"rpw" gorm:"type:int;default:0"`  // requests per week, 0 means unlimited
 }
 
 func GetMaxUserId() int {
@@ -369,6 +372,12 @@ func GetUserGroup(id int) (group string, err error) {
 
 	err = DB.Model(&User{}).Where("id = ?", id).Select(groupCol).Find(&group).Error
 	return group, err
+}
+
+func GetUserRateLimits(id int) (rpm int, rpd int, rpw int, err error) {
+	var user User
+	err = DB.Model(&User{}).Where("id = ?", id).Select("rpm, rpd, rpw").First(&user).Error
+	return user.RPM, user.RPD, user.RPW, err
 }
 
 func IncreaseUserQuota(id int, quota int64) (err error) {

@@ -19,6 +19,9 @@ const EditUser = () => {
     email: '',
     quota: 0,
     group: 'default',
+    rpm: 0,
+    rpd: 0,
+    rpw: 0,
   });
   const [groupOptions, setGroupOptions] = useState([]);
   const {
@@ -30,6 +33,9 @@ const EditUser = () => {
     email,
     quota,
     group,
+    rpm,
+    rpd,
+    rpw,
   } = inputs;
   const handleInputChange = (e, { name, value }) => {
     setInputs((inputs) => ({ ...inputs, [name]: value }));
@@ -159,6 +165,39 @@ const EditUser = () => {
                     placeholder={t('user.edit.quota_placeholder')}
                     onChange={handleInputChange}
                     value={quota}
+                    type={'number'}
+                    autoComplete='new-password'
+                  />
+                </Form.Field>
+                <Form.Field>
+                  <Form.Input
+                    label='RPM（每分钟请求数限制，0表示不限制）'
+                    name='rpm'
+                    placeholder='设置每分钟请求数限制'
+                    onChange={handleInputChange}
+                    value={rpm}
+                    type={'number'}
+                    autoComplete='new-password'
+                  />
+                </Form.Field>
+                <Form.Field>
+                  <Form.Input
+                    label='RPD（每天请求数限制，0表示不限制）'
+                    name='rpd'
+                    placeholder='设置每天请求数限制'
+                    onChange={handleInputChange}
+                    value={rpd}
+                    type={'number'}
+                    autoComplete='new-password'
+                  />
+                </Form.Field>
+                <Form.Field>
+                  <Form.Input
+                    label='RPW（每周请求数限制，0表示不限制）'
+                    name='rpw'
+                    placeholder='设置每周请求数限制'
+                    onChange={handleInputChange}
+                    value={rpw}
                     type={'number'}
                     autoComplete='new-password'
                   />

@@ -72,6 +72,7 @@ func InitOptionMap() {
 	config.OptionMap["CompletionRatio"] = billingratio.CompletionRatio2JSONString()
 	config.OptionMap["TopUpLink"] = config.TopUpLink
 	config.OptionMap["ChatLink"] = config.ChatLink
+	config.OptionMap["ModelMarketplaceLink"] = ""
 	config.OptionMap["QuotaPerUnit"] = strconv.FormatFloat(config.QuotaPerUnit, 'f', -1, 64)
 	config.OptionMap["RetryTimes"] = strconv.Itoa(config.RetryTimes)
 	config.OptionMap["Theme"] = config.Theme
@@ -233,6 +234,8 @@ func updateOptionMap(key string, value string) (err error) {
 		config.TopUpLink = value
 	case "ChatLink":
 		config.ChatLink = value
+	case "ModelMarketplaceLink":
+		config.ModelMarketplaceLink = value
 	case "ChannelDisableThreshold":
 		config.ChannelDisableThreshold, _ = strconv.ParseFloat(value, 64)
 	case "QuotaPerUnit":

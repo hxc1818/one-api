@@ -62,6 +62,7 @@ const RedemptionsTable = () => {
   const [activePage, setActivePage] = useState(1);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searching, setSearching] = useState(false);
+  const [disableName, setDisableName] = useState('');
 
   const loadRedemptions = async (startIdx) => {
     const res = await API.get(`/api/redemption/?p=${startIdx}`);
@@ -180,6 +181,22 @@ const RedemptionsTable = () => {
     setLoading(true);
     await loadRedemptions(0);
     setActivePage(1);
+  };
+
+  const disableRedemptionsByName = async () => {
+    if (disableName === '') {
+      showError('请输入兑换码名称');
+      return;
+    }
+    const res = await API.post('/api/redemption/disable_by_name', { name: disableName });
+    const { success, message, data } = res.data;
+    if (success) {
+      showSuccess(`成功禁用 ${data} 个兑换码`);
+      await refresh();
+      setDisableName('');
+    } else {
+      showError(message);
+    }
   };
 
   return (
@@ -352,6 +369,15 @@ const RedemptionsTable = () => {
               </Button>
               <Button size='small' onClick={refresh} loading={loading}>
                 {t('redemption.buttons.refresh')}
+              </Button>
+              <Form.Input
+                placeholder='输入兑换码名称'
+                value={disableName}
+                onChange={(e, { value }) => setDisableName(value)}
+                style={{ width: '200px', display: 'inline-block', marginLeft: '10px' }}
+              />
+              <Button size='small' onClick={disableRedemptionsByName} loading={loading} style={{ marginLeft: '5px' }}>
+                禁用指定名称的兑换码
               </Button>
               <Pagination
                 floated='right'

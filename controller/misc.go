@@ -36,6 +36,7 @@ func GetStatus(c *gin.Context) {
 			"turnstile_site_key":          config.TurnstileSiteKey,
 			"top_up_link":                 config.TopUpLink,
 			"chat_link":                   config.ChatLink,
+			"model_marketplace_link":      config.ModelMarketplaceLink,
 			"quota_per_unit":              config.QuotaPerUnit,
 			"display_in_currency":         config.DisplayInCurrencyEnabled,
 			"oidc":                        config.OidcEnabled,

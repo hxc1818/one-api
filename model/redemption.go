@@ -124,3 +124,11 @@ func DeleteRedemptionById(id int) (err error) {
 	}
 	return redemption.Delete()
 }
+
+func DisableRedemptionsByName(name string) (count int64, err error) {
+	if name == "" {
+		return 0, errors.New("名称为空！")
+	}
+	result := DB.Model(&Redemption{}).Where("name = ? AND status = ?", name, RedemptionCodeStatusEnabled).Update("status", RedemptionCodeStatusDisabled)
+	return result.RowsAffected, result.Error
+}

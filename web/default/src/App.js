@@ -59,6 +59,11 @@ function App() {
         } else {
           localStorage.removeItem('chat_link');
         }
+        if (data.model_marketplace_link) {
+          localStorage.setItem('model_marketplace_link', data.model_marketplace_link);
+        } else {
+          localStorage.removeItem('model_marketplace_link');
+        }
         if (
           data.version !== process.env.REACT_APP_VERSION &&
           data.version !== 'v0.0.0' &&

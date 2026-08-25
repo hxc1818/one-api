@@ -81,6 +81,15 @@ if (localStorage.getItem('chat_link')) {
   });
 }
 
+if (localStorage.getItem('model_marketplace_link')) {
+  headerButtons.push({
+    name: 'header.model_marketplace',
+    to: '/model-marketplace',
+    icon: 'shopping bag',
+    external: true,
+  });
+}
+
 const Header = () => {
   const { t, i18n } = useTranslation();
   const [userState, userDispatch] = useContext(UserContext);
@@ -111,11 +120,40 @@ const Header = () => {
           <Menu.Item
             key={button.name}
             onClick={() => {
-              navigate(button.to);
+              if (button.external) {
+                const link = localStorage.getItem('model_marketplace_link');
+                if (link) {
+                  window.open(link, '_blank');
+                }
+              } else {
+                navigate(button.to);
+              }
               setShowSidebar(false);
             }}
             style={{ fontSize: '15px' }}
           >
+            {t(button.name)}
+          </Menu.Item>
+        );
+      }
+      if (button.external) {
+        return (
+          <Menu.Item
+            key={button.name}
+            onClick={() => {
+              const link = localStorage.getItem('model_marketplace_link');
+              if (link) {
+                window.open(link, '_blank');
+              }
+            }}
+            style={{
+              fontSize: '15px',
+              fontWeight: '400',
+              color: '#666',
+              cursor: 'pointer',
+            }}
+          >
+            <Icon name={button.icon} style={{ marginRight: '4px' }} />
             {t(button.name)}
           </Menu.Item>
         );

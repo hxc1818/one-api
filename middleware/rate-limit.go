@@ -10,6 +10,8 @@ import (
 
 	"github.com/songquanpeng/one-api/common"
 	"github.com/songquanpeng/one-api/common/config"
+	"github.com/songquanpeng/one-api/common/ctxkey"
+	"github.com/songquanpeng/one-api/model"
 )
 
 var timeFormat = "2006-01-02T15:04:05.000Z"
@@ -108,4 +110,90 @@ func DownloadRateLimit() func(c *gin.Context) {
 
 func UploadRateLimit() func(c *gin.Context) {
 	return rateLimitFactory(config.UploadRateLimitNum, config.UploadRateLimitDuration, "UP")
+}
+
+func UserRateLimit() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		ctx := context.Background()
+		userId := c.GetInt(ctxkey.Id)
+		if userId == 0 {
+			c.Next()
+			return
+		}
+
+		// Get user's rate limits
+		rpm, rpd, rpw, err := model.GetUserRateLimits(userId)
+		if err != nil {
+			// If error getting limits, just continue
+			c.Next()
+			return
+		}
+
+		// Check RPM (requests per minute)
+		if rpm > 0 {
+			if !checkUserRateLimit(ctx, userId, rpm, 60, "RPM", c) {
+				return
+			}
+		}
+
+		// Check RPD (requests per day)
+		if rpd > 0 {
+			if !checkUserRateLimit(ctx, userId, rpd, 86400, "RPD", c) {
+				return
+			}
+		}
+
+		// Check RPW (requests per week)
+		if rpw > 0 {
+			if !checkUserRateLimit(ctx, userId, rpw, 604800, "RPW", c) {
+				return
+			}
+		}
+
+		c.Next()
+	}
+}
+
+func checkUserRateLimit(ctx context.Context, userId int, maxRequestNum int, duration int64, limitType string, c *gin.Context) bool {
+	key := fmt.Sprintf("userRateLimit:%s:%d", limitType, userId)
+
+	if common.RedisEnabled {
+		rdb := common.RDB
+		listLength, err := rdb.LLen(ctx, key).Result()
+		if err != nil {
+			// On error, allow the request
+			return true
+		}
+
+		if listLength < int64(maxRequestNum) {
+			rdb.LPush(ctx, key, time.Now().Format(timeFormat))
+			rdb.Expire(ctx, key, time.Duration(duration)*time.Second)
+			return true
+		} else {
+			oldTimeStr, _ := rdb.LIndex(ctx, key, -1).Result()
+			oldTime, err := time.Parse(timeFormat, oldTimeStr)
+			if err != nil {
+				return true
+			}
+			nowTime := time.Now()
+			if int64(nowTime.Sub(oldTime).Seconds()) < duration {
+				rdb.Expire(ctx, key, time.Duration(duration)*time.Second)
+				abortWithMessage(c, http.StatusTooManyRequests, "上游渠道可能还有配额，但是我们无法分配")
+				return false
+			} else {
+				rdb.LPush(ctx, key, time.Now().Format(timeFormat))
+				rdb.LTrim(ctx, key, 0, int64(maxRequestNum-1))
+				rdb.Expire(ctx, key, time.Duration(duration)*time.Second)
+				return true
+			}
+		}
+	} else {
+		// Use in-memory rate limiter
+		inMemoryRateLimiter.Init(config.RateLimitKeyExpirationDuration)
+		if !inMemoryRateLimiter.Request(key, maxRequestNum, duration) {
+			abortWithMessage(c, http.StatusTooManyRequests, "上游渠道可能还有配额，但是我们无法分配")
+			return false
+		}
+		return true
+	}
 }

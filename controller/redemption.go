@@ -193,3 +193,31 @@ func UpdateRedemption(c *gin.Context) {
 	})
 	return
 }
+
+func DisableRedemptionsByName(c *gin.Context) {
+	var req struct {
+		Name string `json:"name"`
+	}
+	err := c.ShouldBindJSON(&req)
+	if err != nil || req.Name == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "请提供兑换码名称",
+		})
+		return
+	}
+	count, err := model.DisableRedemptionsByName(req.Name)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    count,
+	})
+	return
+}

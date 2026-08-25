@@ -23,6 +23,7 @@ const OperationSetting = () => {
     GroupRatio: '',
     TopUpLink: '',
     ChatLink: '',
+    ModelMarketplaceLink: '',
     QuotaPerUnit: 0,
     AutomaticDisableChannelEnabled: '',
     AutomaticEnableChannelEnabled: '',
@@ -158,6 +159,9 @@ const OperationSetting = () => {
         }
         if (originInputs['ChatLink'] !== inputs.ChatLink) {
           await updateOption('ChatLink', inputs.ChatLink);
+        }
+        if (originInputs['ModelMarketplaceLink'] !== inputs.ModelMarketplaceLink) {
+          await updateOption('ModelMarketplaceLink', inputs.ModelMarketplaceLink);
         }
         if (originInputs['QuotaPerUnit'] !== inputs.QuotaPerUnit) {
           await updateOption('QuotaPerUnit', inputs.QuotaPerUnit);
@@ -385,6 +389,15 @@ const OperationSetting = () => {
               placeholder={t('setting.operation.general.chat_link_placeholder')}
             />
             <Form.Input
+              label='模型广场链接'
+              name='ModelMarketplaceLink'
+              onChange={handleInputChange}
+              autoComplete='new-password'
+              value={inputs.ModelMarketplaceLink}
+              type='link'
+              placeholder='设置模型广场的链接地址'
+            />
+            <Form.Input
               label={t('setting.operation.general.quota_per_unit')}
               name='QuotaPerUnit'
               onChange={handleInputChange}
@@ -396,6 +409,8 @@ const OperationSetting = () => {
                 'setting.operation.general.quota_per_unit_placeholder'
               )}
             />
+          </Form.Group>
+          <Form.Group widths={4}>
             <Form.Input
               label={t('setting.operation.general.retry_times')}
               name='RetryTimes'
