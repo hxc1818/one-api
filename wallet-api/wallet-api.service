@@ -1,0 +1,34 @@
+[Unit]
+Description=Wallet API Service
+After=network.target mysql.service redis.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/wallet-api
+ExecStart=/opt/wallet-api/wallet-api
+Restart=always
+RestartSec=5
+
+# 环境变量
+Environment="SQL_DSN=root:password@tcp(localhost:3306)/oneapi?charset=utf8mb4&parseTime=True&loc=Local"
+Environment="REDIS_CONN_STRING=redis://localhost:6379/0"
+Environment="JWT_SECRET=your-secret-key-change-me"
+Environment="WALLET_API_PORT=8081"
+Environment="REDIS_STREAM_KEY=wallet:balance:updates"
+Environment="REDIS_STREAM_MAXLEN=10000"
+
+# 可选：日志数据库配置
+# Environment="LOG_SQL_DSN=root:password@tcp(localhost:3306)/oneapi?charset=utf8mb4&parseTime=True&loc=Local"
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wallet-api
+
+# 安全设置
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

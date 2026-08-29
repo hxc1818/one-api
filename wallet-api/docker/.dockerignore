@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+
+# 构建产物
+wallet-api
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 测试文件
+*.test
+*.out
+
+# 依赖
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 数据库文件
+*.db
+*.db-shm
+*.db-wal
+
+# 日志
+*.log
+
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# Docker 文件
+docker-compose.yml
+Dockerfile
+
+# 文档和示例
+README.md
+examples/
+*.md
+
+# macOS
+.DS_Store
+
+# 临时文件
+tmp/
+temp/

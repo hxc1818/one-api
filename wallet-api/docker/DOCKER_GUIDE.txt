@@ -1,0 +1,343 @@
+================================================================================
+                    Wallet API Docker 快速部署指南
+================================================================================
+
+📁 文件说明
+--------------------------------------------------------------------------------
+docker/
+├── Dockerfile              # Docker 镜像构建文件（多阶段构建，优化镜像大小）
+├── docker-compose.yml      # 完整服务编排（包含 MySQL + Redis + Wallet API）
+├── deploy.sh              # 交互式部署脚本（推荐使用）
+├── build.sh               # 镜像构建脚本
+├── .env.example           # 环境变量配置模板
+├── .dockerignore          # Docker 构建忽略文件
+├── init.sql               # 数据库初始化脚本
+├── README.md              # 完整部署文档
+└── DOCKER_GUIDE.txt       # 本文件（快速参考）
+
+================================================================================
+🚀 快速开始（3 步部署）
+================================================================================
+
+【步骤 1】进入 docker 目录
+--------------------------
+cd wallet-api/docker
+
+【步骤 2】配置环境变量
+--------------------------
+cp .env.example .env
+nano .env  # 或使用其他编辑器
+
+必须修改的配置：
+  - SQL_DSN: 数据库连接（必须与 one-api 共享同一数据库）
+  - REDIS_CONN_STRING: Redis 连接
+  - JWT_SECRET: 使用 openssl rand -hex 32 生成随机密钥
+
+【步骤 3】运行部署脚本
+--------------------------
+./deploy.sh
+
+选择: 1) Build and start (full deployment)
+
+完成！服务将在 http://localhost:8081 上运行
+
+================================================================================
+📋 部署场景
+================================================================================
+
+【场景 1】全新部署（推荐新手）
+--------------------------
+适合：完全新建环境，自动创建 MySQL、Redis 和 Wallet API
+
+命令：
+  cd wallet-api/docker
+  cp .env.example .env
+  # 编辑 .env（使用默认配置即可）
+  ./deploy.sh
+  # 选择：1) Build and start
+
+说明：会自动创建所有依赖服务
+
+【场景 2】连接现有 one-api 数据库（推荐生产环境）
+--------------------------
+适合：已有运行中的 one-api，只需添加 wallet-api 服务
+
+步骤：
+  1. 编辑 .env 文件，配置已有数据库和 Redis
+     SQL_DSN=root:password@tcp(your_host:3306)/oneapi?charset=utf8mb4&parseTime=True&loc=Local
+     REDIS_CONN_STRING=redis://your_redis_host:6379/0
+  
+  2. 只启动 wallet-api 服务
+     docker-compose up -d wallet-api
+
+【场景 3】开发环境（本地测试）
+--------------------------
+适合：开发调试
+
+命令：
+  cd wallet-api/docker
+  cp .env.example .env
+  docker-compose up  # 前台运行，查看日志
+
+【场景 4】自定义镜像构建
+--------------------------
+适合：需要自定义镜像标签或推送到私有 Registry
+
+命令：
+  cd wallet-api/docker
+  
+  # 指定镜像名和标签
+  IMAGE_NAME=mycompany/wallet-api IMAGE_TAG=v1.0.0 ./build.sh
+  
+  # 推送到 Registry
+  REGISTRY=docker.io/myusername ./build.sh
+
+================================================================================
+⚙️ 环境变量配置
+================================================================================
+
+【必需配置】
+--------------------------
+SQL_DSN                  数据库连接（必须与 one-api 共享）
+REDIS_CONN_STRING        Redis 连接
+JWT_SECRET              JWT 签名密钥（强烈建议修改）
+
+【可选配置】
+--------------------------
+LOG_SQL_DSN             独立的日志数据库（不设置则使用主库）
+REDIS_PASSWORD          Redis 密码
+WALLET_API_PORT         服务端口（默认 8081）
+REDIS_STREAM_KEY        Stream 键名（默认 wallet:balance:updates）
+REDIS_STREAM_MAXLEN     Stream 最大消息数（默认 10000）
+
+【生成随机密钥】
+--------------------------
+openssl rand -hex 32    # 生成 JWT_SECRET
+
+================================================================================
+🔧 常用命令
+================================================================================
+
+【服务管理】
+--------------------------
+启动服务:        docker-compose up -d
+停止服务:        docker-compose down
+重启服务:        docker-compose restart wallet-api
+查看状态:        docker-compose ps
+查看日志:        docker-compose logs -f wallet-api
+进入容器:        docker-compose exec wallet-api sh
+
+【健康检查】
+--------------------------
+测试健康:        curl http://localhost:8081/health
+查看容器状态:    docker-compose ps
+
+【数据库操作】
+--------------------------
+进入 MySQL:      docker-compose exec mysql mysql -uroot -p
+备份数据库:      docker-compose exec mysql mysqldump -uroot -p oneapi > backup.sql
+进入 Redis:      docker-compose exec redis redis-cli
+
+【日志查看】
+--------------------------
+实时日志:        docker-compose logs -f wallet-api
+最近100行:       docker-compose logs --tail=100 wallet-api
+错误日志:        docker-compose logs wallet-api 2>&1 | grep -i error
+
+【镜像管理】
+--------------------------
+构建镜像:        docker-compose build --no-cache
+查看镜像:        docker images wallet-api
+删除镜像:        docker rmi wallet-api:latest
+
+【清理】
+--------------------------
+停止并删除容器:  docker-compose down
+删除数据卷:      docker-compose down -v
+完全清理:        docker-compose down -v --rmi all
+
+================================================================================
+🐛 故障排查
+================================================================================
+
+【问题 1】数据库连接失败
+--------------------------
+检查步骤：
+  1. 确认数据库是否启动：docker-compose ps mysql
+  2. 查看数据库日志：docker-compose logs mysql
+  3. 测试连接：docker-compose exec mysql mysql -uroot -p
+  4. 检查 SQL_DSN 配置是否正确
+
+【问题 2】Redis 连接失败
+--------------------------
+检查步骤：
+  1. 确认 Redis 是否启动：docker-compose ps redis
+  2. 测试连接：docker-compose exec redis redis-cli ping
+  3. 检查 REDIS_CONN_STRING 配置
+
+【问题 3】服务启动失败
+--------------------------
+查看详细日志：
+  docker-compose logs wallet-api
+  
+常见原因：
+  - 环境变量未配置
+  - 端口被占用（修改 WALLET_API_PORT）
+  - 数据库或 Redis 未启动
+
+【问题 4】端口被占用
+--------------------------
+解决方法：
+  1. 检查端口：netstat -tuln | grep 8081
+  2. 修改端口：编辑 .env 中的 WALLET_API_PORT
+  3. 重启服务：docker-compose down && docker-compose up -d
+
+【问题 5】权限问题
+--------------------------
+解决方法：
+  sudo chown -R $USER:$USER ./
+  chmod +x deploy.sh build.sh
+
+================================================================================
+🧪 API 测试
+================================================================================
+
+【健康检查】
+--------------------------
+curl http://localhost:8081/health
+
+预期响应：{"status":"ok"}
+
+【用户认证】
+--------------------------
+curl -X POST http://localhost:8081/api/v1/auth/verify \
+  -H "Content-Type: application/json" \
+  -d '{"username":"root","password":"123456"}'
+
+【查询余额】
+--------------------------
+curl -X GET http://localhost:8081/api/v1/balance \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+【发起扣款】
+--------------------------
+curl -X POST http://localhost:8081/api/v1/deduct \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"amount":100,"description":"测试扣款"}'
+
+【回退扣款】
+--------------------------
+curl -X POST http://localhost:8081/api/v1/refund \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"transaction_id":123,"description":"退款"}'
+
+================================================================================
+🔐 安全建议
+================================================================================
+
+【生产环境必做】
+--------------------------
+1. 修改 JWT_SECRET 为随机字符串
+   openssl rand -hex 32
+
+2. 修改 MySQL 默认密码
+   MYSQL_ROOT_PASSWORD=$(openssl rand -base64 32)
+
+3. 设置 Redis 密码
+   REDIS_PASSWORD=your_strong_password
+
+4. 限制网络访问（仅本地）
+   ports:
+     - "127.0.0.1:8081:8081"
+
+5. 使用反向代理（Nginx + HTTPS）
+
+6. 定期备份数据库
+
+【防火墙配置】
+--------------------------
+# 仅允许必要端口
+ufw allow 8081/tcp  # Wallet API
+ufw enable
+
+================================================================================
+📊 监控和维护
+================================================================================
+
+【资源监控】
+--------------------------
+查看资源使用：docker stats wallet-api
+查看容器详情：docker inspect wallet-api
+
+【日志轮转】
+--------------------------
+# 配置 Docker 日志驱动
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+
+【定期维护】
+--------------------------
+1. 备份数据库（每天）
+2. 清理旧日志（每周）
+3. 检查磁盘空间（每天）
+4. 更新镜像（每月）
+
+================================================================================
+🔄 更新部署
+================================================================================
+
+【更新步骤】
+--------------------------
+1. 备份数据
+   docker-compose exec mysql mysqldump -uroot -p oneapi > backup-$(date +%F).sql
+
+2. 停止服务
+   docker-compose down
+
+3. 拉取最新代码
+   git pull
+
+4. 重新构建
+   docker-compose build --no-cache
+
+5. 启动服务
+   docker-compose up -d
+
+6. 验证服务
+   curl http://localhost:8081/health
+
+================================================================================
+📞 获取帮助
+================================================================================
+
+文档：
+  - 完整文档：./README.md
+  - API 文档：../README.md
+  - 消费者示例：../examples/consumer-example.md
+
+命令：
+  - 交互式部署：./deploy.sh
+  - 构建镜像：./build.sh
+
+检查清单：
+  ✓ .env 文件已配置
+  ✓ JWT_SECRET 已修改
+  ✓ 数据库连接正确
+  ✓ Redis 连接正确
+  ✓ 端口未被占用
+
+================================================================================
+                              部署完成！
+================================================================================
+
+访问服务：http://localhost:8081
+健康检查：http://localhost:8081/health
+API 文档：../README.md
+

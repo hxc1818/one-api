@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  wallet-api:
+    build: .
+    container_name: wallet-api
+    ports:
+      - "8081:8081"
+    environment:
+      # 数据库配置（与 one-api 共享数据库）
+      SQL_DSN: "root:password@tcp(mysql:3306)/oneapi?charset=utf8mb4&parseTime=True&loc=Local"
+      
+      # 可选：独立的日志数据库
+      # LOG_SQL_DSN: "root:password@tcp(mysql:3306)/oneapi?charset=utf8mb4&parseTime=True&loc=Local"
+      
+      # Redis 配置
+      REDIS_CONN_STRING: "redis://redis:6379/0"
+      REDIS_PASSWORD: ""
+      
+      # JWT 密钥（请修改为随机字符串）
+      JWT_SECRET: "your-secret-key-change-me"
+      
+      # 服务端口
+      WALLET_API_PORT: "8081"
+      
+      # Redis Stream 配置
+      REDIS_STREAM_KEY: "wallet:balance:updates"
+      REDIS_STREAM_MAXLEN: "10000"
+    depends_on:
+      - mysql
+      - redis
+    restart: unless-stopped
+    networks:
+      - wallet-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: wallet-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: oneapi
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - wallet-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: wallet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - wallet-network
+
+volumes:
+  mysql-data:
+  redis-data:
+
+networks:
+  wallet-network:
+    driver: bridge
