@@ -235,6 +235,14 @@ const RedemptionsTable = () => {
             <Table.HeaderCell
               style={{ cursor: 'pointer' }}
               onClick={() => {
+                sortRedemption('activity_tag');
+              }}
+            >
+              活动标签
+            </Table.HeaderCell>
+            <Table.HeaderCell
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
                 sortRedemption('status');
               }}
             >
@@ -281,6 +289,9 @@ const RedemptionsTable = () => {
                   <Table.Cell>{redemption.id}</Table.Cell>
                   <Table.Cell>
                     {redemption.name ? redemption.name : t('redemption.table.no_name')}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {redemption.activity_tag ? <Label color='blue'>{redemption.activity_tag}</Label> : '-'}
                   </Table.Cell>
                   <Table.Cell>{renderStatus(redemption.status, t)}</Table.Cell>
                   <Table.Cell>{renderQuota(redemption.quota, t)}</Table.Cell>
@@ -358,7 +369,7 @@ const RedemptionsTable = () => {
 
         <Table.Footer>
           <Table.Row>
-            <Table.HeaderCell colSpan='7'>
+            <Table.HeaderCell colSpan='8'>
               <Button
                 size='small'
                 as={Link}

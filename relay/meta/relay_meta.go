@@ -35,6 +35,9 @@ type Meta struct {
 	PromptTokens       int // only for DoResponse
 	ForcedSystemPrompt string
 	StartTime          time.Time
+	// 专项余额相关字段
+	UseSpecialQuota  bool  // 是否使用了专项余额
+	SpecialQuotaUsed int64 // 使用的专项余额数量
 }
 
 func GetByContext(c *gin.Context) *Meta {

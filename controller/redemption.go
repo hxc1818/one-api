@@ -106,6 +106,29 @@ func AddRedemption(c *gin.Context) {
 		})
 		return
 	}
+	// 验证专用兑换码的配置
+	if redemption.Type == model.RedemptionTypeSpecial {
+		if redemption.Models == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "专用兑换码必须指定模型",
+			})
+			return
+		}
+		// 验证模型JSON格式
+		_, err := model.ParseModels(redemption.Models)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "模型配置格式错误",
+			})
+			return
+		}
+	}
+	// 如果type为空，默认为普通兑换码
+	if redemption.Type == 0 {
+		redemption.Type = model.RedemptionTypeGeneral
+	}
 	var keys []string
 	for i := 0; i < redemption.Count; i++ {
 		key := random.GetUUID()
@@ -115,6 +138,10 @@ func AddRedemption(c *gin.Context) {
 			Key:         key,
 			CreatedTime: helper.GetTimestamp(),
 			Quota:       redemption.Quota,
+			Type:        redemption.Type,
+			ChannelId:   redemption.ChannelId,
+			Models:      redemption.Models,
+			ActivityTag: redemption.ActivityTag,
 		}
 		err = cleanRedemption.Insert()
 		if err != nil {
@@ -177,6 +204,28 @@ func UpdateRedemption(c *gin.Context) {
 		// If you add more fields, please also update redemption.Update()
 		cleanRedemption.Name = redemption.Name
 		cleanRedemption.Quota = redemption.Quota
+		cleanRedemption.Type = redemption.Type
+		cleanRedemption.ChannelId = redemption.ChannelId
+		cleanRedemption.Models = redemption.Models
+		cleanRedemption.ActivityTag = redemption.ActivityTag
+		// 验证专用兑换码的配置
+		if cleanRedemption.Type == model.RedemptionTypeSpecial {
+			if cleanRedemption.Models == "" {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "专用兑换码必须指定模型",
+				})
+				return
+			}
+			_, err := model.ParseModels(cleanRedemption.Models)
+			if err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "模型配置格式错误",
+				})
+				return
+			}
+		}
 	}
 	err = cleanRedemption.Update()
 	if err != nil {

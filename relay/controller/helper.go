@@ -75,6 +75,63 @@ func getPreConsumedQuota(textRequest *relaymodel.GeneralOpenAIRequest, promptTok
 func preConsumeQuota(ctx context.Context, textRequest *relaymodel.GeneralOpenAIRequest, promptTokens int, ratio float64, meta *meta.Meta) (int64, *relaymodel.ErrorWithStatusCode) {
 	preConsumedQuota := getPreConsumedQuota(textRequest, promptTokens, ratio)
 
+	// 先检查是否有专项余额
+	specialQuota, err := model.GetUserSpecialQuota(meta.UserId, meta.ChannelId, textRequest.Model)
+	if err != nil {
+		return preConsumedQuota, openai.ErrorWrapper(err, "get_special_quota_failed", http.StatusInternalServerError)
+	}
+
+	// 如果有专项余额且足够，优先使用专项余额
+	if specialQuota >= preConsumedQuota {
+		err = model.DecreaseSpecialQuota(meta.UserId, meta.ChannelId, textRequest.Model, preConsumedQuota)
+		if err != nil {
+			return preConsumedQuota, openai.ErrorWrapper(err, "decrease_special_quota_failed", http.StatusInternalServerError)
+		}
+		// 标记使用了专项余额
+		meta.UseSpecialQuota = true
+		meta.SpecialQuotaUsed = preConsumedQuota
+		logger.Info(ctx, fmt.Sprintf("user %d uses special quota %d for model %s", meta.UserId, preConsumedQuota, textRequest.Model))
+		return preConsumedQuota, nil
+	}
+
+	// 如果有部分专项余额，先消耗专项余额，剩余部分消耗通用余额
+	if specialQuota > 0 {
+		err = model.DecreaseSpecialQuota(meta.UserId, meta.ChannelId, textRequest.Model, specialQuota)
+		if err != nil {
+			return preConsumedQuota, openai.ErrorWrapper(err, "decrease_special_quota_failed", http.StatusInternalServerError)
+		}
+		meta.UseSpecialQuota = true
+		meta.SpecialQuotaUsed = specialQuota
+		logger.Info(ctx, fmt.Sprintf("user %d uses partial special quota %d for model %s", meta.UserId, specialQuota, textRequest.Model))
+		// 剩余部分从通用余额扣除
+		remainingQuota := preConsumedQuota - specialQuota
+		userQuota, err := model.CacheGetUserQuota(ctx, meta.UserId)
+		if err != nil {
+			return preConsumedQuota, openai.ErrorWrapper(err, "get_user_quota_failed", http.StatusInternalServerError)
+		}
+		if userQuota-remainingQuota < 0 {
+			// 通用余额不足，需要回滚专项余额
+			_ = model.IncreaseSpecialQuota(meta.UserId, meta.ChannelId, textRequest.Model, specialQuota)
+			return preConsumedQuota, openai.ErrorWrapper(errors.New("user quota is not enough"), "insufficient_user_quota", http.StatusForbidden)
+		}
+		err = model.CacheDecreaseUserQuota(meta.UserId, remainingQuota)
+		if err != nil {
+			return preConsumedQuota, openai.ErrorWrapper(err, "decrease_user_quota_failed", http.StatusInternalServerError)
+		}
+		if userQuota > 100*preConsumedQuota {
+			preConsumedQuota = 0
+			logger.Info(ctx, fmt.Sprintf("user %d has enough quota %d, trusted and no need to pre-consume", meta.UserId, userQuota))
+		}
+		if preConsumedQuota > 0 {
+			err := model.PreConsumeTokenQuota(meta.TokenId, preConsumedQuota)
+			if err != nil {
+				return preConsumedQuota, openai.ErrorWrapper(err, "pre_consume_token_quota_failed", http.StatusForbidden)
+			}
+		}
+		return preConsumedQuota, nil
+	}
+
+	// 没有专项余额，使用通用余额
 	userQuota, err := model.CacheGetUserQuota(ctx, meta.UserId)
 	if err != nil {
 		return preConsumedQuota, openai.ErrorWrapper(err, "get_user_quota_failed", http.StatusInternalServerError)
@@ -120,6 +177,60 @@ func postConsumeQuota(ctx context.Context, usage *relaymodel.Usage, meta *meta.M
 		// we cannot just return, because we may have to return the pre-consumed quota
 		quota = 0
 	}
+
+	// 处理专项余额的情况
+	if meta.UseSpecialQuota {
+		// 已经使用了专项余额
+		if quota <= meta.SpecialQuotaUsed {
+			// 实际消耗小于等于预消耗的专项余额，需要退还多余的专项余额
+			refund := meta.SpecialQuotaUsed - quota
+			if refund > 0 {
+				err := model.IncreaseSpecialQuota(meta.UserId, meta.ChannelId, textRequest.Model, refund)
+				if err != nil {
+					logger.Error(ctx, "error refunding special quota: "+err.Error())
+				}
+			}
+			// 如果之前还消耗了部分通用余额，也需要退还
+			if preConsumedQuota > meta.SpecialQuotaUsed {
+				_ = preConsumedQuota - meta.SpecialQuotaUsed
+				err := model.CacheUpdateUserQuota(ctx, meta.UserId)
+				if err != nil {
+					logger.Error(ctx, "error update user quota cache: "+err.Error())
+				}
+			}
+		} else {
+			// 实际消耗大于预消耗的专项余额，需要额外扣除通用余额
+			additionalQuota := quota - meta.SpecialQuotaUsed
+			quotaDelta := additionalQuota - (preConsumedQuota - meta.SpecialQuotaUsed)
+			err := model.PostConsumeTokenQuota(meta.TokenId, quotaDelta)
+			if err != nil {
+				logger.Error(ctx, "error consuming token remain quota: "+err.Error())
+			}
+			err = model.CacheUpdateUserQuota(ctx, meta.UserId)
+			if err != nil {
+				logger.Error(ctx, "error update user quota cache: "+err.Error())
+			}
+		}
+		logContent := fmt.Sprintf("专项余额：%s | 倍率：%.2f × %.2f × %.2f", common.LogQuota(meta.SpecialQuotaUsed), modelRatio, groupRatio, completionRatio)
+		model.RecordConsumeLog(ctx, &model.Log{
+			UserId:            meta.UserId,
+			ChannelId:         meta.ChannelId,
+			PromptTokens:      promptTokens,
+			CompletionTokens:  completionTokens,
+			ModelName:         textRequest.Model,
+			TokenName:         meta.TokenName,
+			Quota:             int(quota),
+			Content:           logContent,
+			IsStream:          meta.IsStream,
+			ElapsedTime:       helper.CalcElapsedTime(meta.StartTime),
+			SystemPromptReset: systemPromptReset,
+		})
+		model.UpdateUserUsedQuotaAndRequestCount(meta.UserId, quota)
+		model.UpdateChannelUsedQuota(meta.ChannelId, quota)
+		return
+	}
+
+	// 未使用专项余额，按原逻辑处理
 	quotaDelta := quota - preConsumedQuota
 	err := model.PostConsumeTokenQuota(meta.TokenId, quotaDelta)
 	if err != nil {

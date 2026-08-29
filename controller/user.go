@@ -779,6 +779,24 @@ func TopUp(c *gin.Context) {
 	return
 }
 
+func GetUserSpecialQuotas(c *gin.Context) {
+	id := c.GetInt("id")
+	specialQuotas, err := model.GetUserSpecialQuotasWithChannelInfo(id)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    specialQuotas,
+	})
+	return
+}
+
 type adminTopUpRequest struct {
 	UserId int    `json:"user_id"`
 	Quota  int    `json:"quota"`

@@ -16,9 +16,10 @@ const EditRedemption = () => {
     name: '',
     quota: 100000,
     count: 1,
+    activity_tag: '',
   };
   const [inputs, setInputs] = useState(originInputs);
-  const { name, quota, count } = inputs;
+  const { name, quota, count, activity_tag } = inputs;
 
   const handleCancel = () => {
     navigate('/redemption');
@@ -108,6 +109,16 @@ const EditRedemption = () => {
                 value={quota}
                 autoComplete='new-password'
                 type='number'
+              />
+            </Form.Field>
+            <Form.Field>
+              <Form.Input
+                label='活动标签（可选，同一活动标签的兑换码每个用户只能兑换一个）'
+                name='activity_tag'
+                placeholder='例如：春节活动、新用户福利等'
+                onChange={handleInputChange}
+                value={activity_tag}
+                autoComplete='new-password'
               />
             </Form.Field>
             {!isEdit && (
