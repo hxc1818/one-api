@@ -12,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   API,
   copy,
+  isAdmin,
   showError,
   showSuccess,
   timestamp2string,
@@ -286,16 +287,18 @@ const EditToken = () => {
                 disabled={unlimited_quota}
               />
             </Form.Field>
-            <Button
-              type={'button'}
-              onClick={() => {
-                setUnlimitedQuota();
-              }}
-            >
-              {unlimited_quota
-                ? t('token.edit.buttons.cancel_unlimited')
-                : t('token.edit.buttons.unlimited_quota')}
-            </Button>
+            {isAdmin() && (
+              <Button
+                type={'button'}
+                onClick={() => {
+                  setUnlimitedQuota();
+                }}
+              >
+                {unlimited_quota
+                  ? t('token.edit.buttons.cancel_unlimited')
+                  : t('token.edit.buttons.unlimited_quota')}
+              </Button>
+            )}
             <Button floated='right' positive onClick={submit}>
               {t('token.edit.buttons.submit')}
             </Button>

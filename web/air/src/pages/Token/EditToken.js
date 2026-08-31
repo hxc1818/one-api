@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API, isMobile, showError, showSuccess, timestamp2string } from '../../helpers';
+import { API, isMobile, isAdmin, showError, showSuccess, timestamp2string } from '../../helpers';
 import { renderQuotaWithPrompt } from '../../helpers/render';
 import {
     AutoComplete,
@@ -324,11 +324,13 @@ const EditToken = (props) => {
             </>
           )}
 
-          <div>
-            <Button style={{ marginTop: 8 }} type={'warning'} onClick={() => {
-              setUnlimitedQuota();
-            }}>{unlimited_quota ? '取消无限额度' : '设为无限额度'}</Button>
-          </div>
+          {isAdmin() && (
+            <div>
+              <Button style={{ marginTop: 8 }} type={'warning'} onClick={() => {
+                setUnlimitedQuota();
+              }}>{unlimited_quota ? '取消无限额度' : '设为无限额度'}</Button>
+            </div>
+          )}
           {/* <Divider />
           <div style={{ marginTop: 10, display: 'flex' }}>
             <Space>

@@ -504,16 +504,28 @@ func DeleteUser(c *gin.Context) {
 	err = model.DeleteUserById(id)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
-			"success": true,
-			"message": "",
+			"success": false,
+			"message": err.Error(),
 		})
 		return
 	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+	})
+	return
 }
 
 func DeleteSelf(c *gin.Context) {
 	id := c.GetInt("id")
-	user, _ := model.GetUserById(id, false)
+	user, err := model.GetUserById(id, false)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
 
 	if user.Role == model.RoleRootUser {
 		c.JSON(http.StatusOK, gin.H{
@@ -523,7 +535,7 @@ func DeleteSelf(c *gin.Context) {
 		return
 	}
 
-	err := model.DeleteUserById(id)
+	err = model.DeleteUserById(id)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
@@ -727,8 +739,14 @@ func EmailBind(c *gin.Context) {
 		})
 		return
 	}
+	if model.IsEmailAlreadyTaken(email) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "该邮箱已被其他账号占用",
+		})
+		return
+	}
 	user.Email = email
-	// no need to check if this email already taken, because we have used verification code to check it
 	err = user.Update(false)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -811,6 +829,20 @@ func AdminTopUp(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": err.Error(),
+		})
+		return
+	}
+	if req.Quota <= 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "充值额度必须大于0",
+		})
+		return
+	}
+	if _, err = model.GetUserById(req.UserId, false); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "用户不存在",
 		})
 		return
 	}

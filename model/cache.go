@@ -95,7 +95,7 @@ func CacheGetUserQuota(ctx context.Context, id int) (quota int64, err error) {
 	}
 	quota, err = strconv.ParseInt(quotaString, 10, 64)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	if quota <= config.PreConsumedQuota { // when user's quota is less than pre-consumed quota, we need to fetch from db
 		logger.Infof(ctx, "user %d's cached quota is too low: %d, refreshing from db", quota, id)

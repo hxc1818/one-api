@@ -65,11 +65,13 @@ func GetSubscription(c *gin.Context) {
 func GetUsage(c *gin.Context) {
 	var quota int64
 	var err error
-	var token *model.Token
 	if config.DisplayTokenStatEnabled {
 		tokenId := c.GetInt(ctxkey.TokenId)
+		var token *model.Token
 		token, err = model.GetTokenById(tokenId)
-		quota = token.UsedQuota
+		if err == nil {
+			quota = token.UsedQuota
+		}
 	} else {
 		userId := c.GetInt(ctxkey.Id)
 		quota, err = model.GetUserUsedQuota(userId)

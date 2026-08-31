@@ -51,7 +51,12 @@ func VerifyCodeWithKey(key string, code string, purpose string) bool {
 	if !okay || int(now.Sub(value.time).Seconds()) >= VerificationValidMinutes*60 {
 		return false
 	}
-	return code == value.code
+	if code == value.code {
+		// verification codes are one-time use
+		delete(verificationMap, purpose+key)
+		return true
+	}
+	return false
 }
 
 func DeleteKey(key string, purpose string) {

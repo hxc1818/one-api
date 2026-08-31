@@ -106,6 +106,13 @@ func AddRedemption(c *gin.Context) {
 		})
 		return
 	}
+	if redemption.Quota <= 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "兑换码额度必须大于0",
+		})
+		return
+	}
 	// 验证专用兑换码的配置
 	if redemption.Type == model.RedemptionTypeSpecial {
 		if redemption.Models == "" {
@@ -199,8 +206,22 @@ func UpdateRedemption(c *gin.Context) {
 		return
 	}
 	if statusOnly != "" {
+		if redemption.Status == model.RedemptionCodeStatusEnabled && cleanRedemption.Status == model.RedemptionCodeStatusUsed {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "已使用的兑换码不允许重新启用",
+			})
+			return
+		}
 		cleanRedemption.Status = redemption.Status
 	} else {
+		if redemption.Quota <= 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "兑换码额度必须大于0",
+			})
+			return
+		}
 		// If you add more fields, please also update redemption.Update()
 		cleanRedemption.Name = redemption.Name
 		cleanRedemption.Quota = redemption.Quota
