@@ -26,7 +26,7 @@ import {
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { renderQuotaWithPrompt, showSuccess, showError } from 'utils/common';
+import { renderQuotaWithPrompt, showSuccess, showError, isAdmin } from 'utils/common';
 import { API } from 'utils/api';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
@@ -288,13 +288,17 @@ const EditModal = ({ open, tokenId, onCancel, onOk }) => {
                   </FormHelperText>
                 )}
               </FormControl>
-              <Switch
-                checked={values.unlimited_quota === true}
-                onClick={() => {
-                  setFieldValue('unlimited_quota', !values.unlimited_quota);
-                }}
-              />{' '}
-              无限额度
+              {isAdmin() && (
+                <>
+                  <Switch
+                    checked={values.unlimited_quota === true}
+                    onClick={() => {
+                      setFieldValue('unlimited_quota', !values.unlimited_quota);
+                    }}
+                  />{' '}
+                  无限额度
+                </>
+              )}
               <DialogActions>
                 <Button onClick={onCancel}>取消</Button>
                 <Button disableElevation disabled={isSubmitting} type="submit" variant="contained" color="primary">

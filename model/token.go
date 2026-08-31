@@ -284,10 +284,11 @@ func PostConsumeTokenQuota(tokenId int, quota int64) (err error) {
 	if err != nil {
 		return err
 	}
+	var userErr error
 	if quota > 0 {
-		err = DecreaseUserQuota(token.UserId, quota)
+		userErr = DecreaseUserQuota(token.UserId, quota)
 	} else {
-		err = IncreaseUserQuota(token.UserId, -quota)
+		userErr = IncreaseUserQuota(token.UserId, -quota)
 	}
 	if !token.UnlimitedQuota {
 		if quota > 0 {
@@ -299,5 +300,5 @@ func PostConsumeTokenQuota(tokenId int, quota int64) (err error) {
 			return err
 		}
 	}
-	return nil
+	return userErr
 }

@@ -138,6 +138,13 @@ func AddToken(c *gin.Context) {
 		})
 		return
 	}
+	if token.UnlimitedQuota && c.GetInt("role") < model.RoleAdminUser {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "无限额度令牌仅管理员可创建",
+		})
+		return
+	}
 
 	cleanToken := model.Token{
 		UserId:         c.GetInt(ctxkey.Id),
@@ -230,8 +237,22 @@ func UpdateToken(c *gin.Context) {
 		}
 	}
 	if statusOnly != "" {
+		if token.Status != model.TokenStatusEnabled && token.Status != model.TokenStatusDisabled {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "无效的令牌状态",
+			})
+			return
+		}
 		cleanToken.Status = token.Status
 	} else {
+		if !cleanToken.UnlimitedQuota && token.UnlimitedQuota && c.GetInt("role") < model.RoleAdminUser {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "无限额度令牌仅管理员可设置",
+			})
+			return
+		}
 		// If you add more fields, please also update token.Update()
 		cleanToken.Name = token.Name
 		cleanToken.ExpiredTime = token.ExpiredTime
